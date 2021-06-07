@@ -1,2 +1,5 @@
 org.kodein.di:kodein-di(-*)
     ^^^^^^^^^              
+
+io.github.javaeden.orchid:*
+                   ^^^^^^
