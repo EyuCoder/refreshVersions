@@ -71,6 +71,7 @@ private fun getArtifactNameToConstantMappingFromObject(
             it != typeOf<String>() && it.javaType != java.lang.Void::class.java
         }
     }.flatMap { kProperty ->
+        if (kProperty.name == "rule") return@flatMap emptySequence()
         @Suppress("unchecked_cast")
         val nestedObjectInstance = (kProperty as KProperty1<Any?, Any>).get(objectInstance)
         getArtifactNameToConstantMappingFromObject(
