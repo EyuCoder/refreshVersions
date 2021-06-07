@@ -23,12 +23,11 @@ object Kodein {
 
     class DI(usePlatformConstraints: Boolean) : DependencyGroup(
         group = "org.kodein.di",
-        usePlatformConstraints = usePlatformConstraints,
         rule = ArtifactVersionKeyRule(
             artifactPattern = "  org.kodein.di:kodein-di(-*)",
             versionKeyPattern = "    ^^^^^^^^^              "
         ),
-        expectedKey = "kodein.di"
+        usePlatformConstraints = usePlatformConstraints
     ) {
         val androidCore
             get() = module("kodein-di-framework-android-core")

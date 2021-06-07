@@ -8,7 +8,6 @@ import Ktor
 import Orchid
 import Splitties
 import Testing
-import de.fayard.refreshVersions.core.internal.DependencyGroup
 import de.fayard.refreshVersions.internal.getArtifactsFromDependenciesObject
 import dependencies.DependencyNotationAndGroup
 import org.gradle.api.artifacts.ModuleIdentifier
@@ -292,14 +291,8 @@ private val testing = listOf(
     }
 )
 
-
-internal val dependencyGroups
-    get() = DependencyGroup.ALL.map {
-        versionKeyWithModules(expected = it.expectedKey, dependenciesObject = it)
-    }
-
 internal val bundledRules
-    get() = dependencyGroups + kotlinX + androidX + google + testing + listOf(
+    get() = kotlinX + androidX + google + testing + listOf(
         versionKeyWithModules(expected = "ktor", dependenciesObject = Ktor),
         versionKeyWithModules(expected = "splitties", dependenciesObject = Splitties),
         versionKeyWithModules(expected = "coil-kt", dependenciesObject = COIL),
