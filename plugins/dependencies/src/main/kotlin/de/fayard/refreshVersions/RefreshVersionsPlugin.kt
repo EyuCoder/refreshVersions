@@ -1,5 +1,6 @@
 package de.fayard.refreshVersions
 
+import de.fayard.refreshVersions.core.MissingEntriesTask
 import de.fayard.refreshVersions.core.RefreshVersionsCorePlugin
 import de.fayard.refreshVersions.core.bootstrapRefreshVersionsCore
 import de.fayard.refreshVersions.core.bootstrapRefreshVersionsCoreForBuildSrc
@@ -104,7 +105,7 @@ open class RefreshVersionsPlugin : Plugin<Any> {
         project.tasks.register<RefreshVersionsDependenciesMigrationTask>(
             name = "migrateToRefreshVersionsDependenciesConstants"
         ) {
-            group = "help"
+            group = "refreshVersions"
             description = "Assists migration from hardcoded dependencies to constants of " +
                 "the refreshVersions dependencies plugin"
             finalizedBy("refreshVersions")
@@ -113,11 +114,18 @@ open class RefreshVersionsPlugin : Plugin<Any> {
         project.tasks.register<DefaultTask>(
             name = "refreshVersionsDependenciesMapping"
         ) {
-            group = "help"
+            group = "refreshVersions"
             description = "Shows the mapping of Gradle dependencies and their typesafe accessors"
             doLast {
                 println(getArtifactNameToConstantMapping().joinToString("\n"))
             }
+        }
+        project.tasks.register<MissingEntriesTask>(
+            name = "refreshVersionsMissingEntries"
+        ) {
+            group = "refreshVersions"
+            description = "Add missing entries to 'versions.properties'"
+            outputs.upToDateWhen { false }
         }
     }
 
