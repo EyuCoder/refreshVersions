@@ -1,23 +1,24 @@
 package de.fayard.refreshVersions.migration.upgrade
 
+import de.fayard.refreshVersions.core.detectPluginsBlock
+import de.fayard.refreshVersions.core.findFilesWithDependencyNotations
+import de.fayard.refreshVersions.core.migrateFileIfNeeded
+import de.fayard.refreshVersions.core.replaceVersionWithUndercore
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.inspectors.forAll
 import io.kotest.matchers.ints.shouldBeExactly
 import io.kotest.matchers.shouldBe
-import org.intellij.lang.annotations.Language
 import java.io.File
-
-// Uncomment to test on local projects
-fun main() {
-    val arg = "compose-samples"
-    val file = File("/Users/jmfayard/IdeaProjects/android/$arg")
-    findFilesWithDependencyNotations(file).forEach {
-        updateFileIfNeeded(it)
-    }
-}
 
 class MigrationTest : StringSpec({
     val testResources: File = File(".").absoluteFile.resolve("src/test/resources")
+
+    "Try migrating loccal repository".config(enabled = false) {
+        val file = File("/Users/jmfayard/IdeaProjects/android/compose-samples")
+        findFilesWithDependencyNotations(file).forEach {
+            migrateFileIfNeeded(it)
+        }
+    }
 
     "Ignore lines that do not contain version" {
         val lines = """
@@ -167,52 +168,6 @@ class MigrationTest : StringSpec({
 })
 
 
-fun updateFileIfNeeded(file: File) {
-    val oldContent = file.readText()
-    val newContent = oldContent.lines()
-        .detectPluginsBlock()
-        .map { (line, isPlugin) -> replaceVersionWithUndercore(line, isPlugin) ?: line }
-        .joinToString(separator = "\n")
-    if (newContent != oldContent) {
-        println("Updating $file")
-        file.writeText(newContent)
-    }
-}
-
-@Language("RegExp")
-val underscoreRegex =
-    "(['\":])(?:\\\$\\{?\\w+ersion}?|\\\$\\w*VERSION|\\\$\\{?(?:versions|rootProject)\\.\\w+}?|(?:\\d+\\.){1,2}\\d+)(?:[.-]?(?:alpha|beta|rc|eap|ALPHA|BETA|RC|EAP|RELEASE|Final|M)[-.]?\\d*)?([\"'])".toRegex()
-
-val pluginVersionRegex =
-    "[. ]version[. (]['\"](\\d+\\.){1,2}\\d+['\"]\\)?".toRegex()
-
-val underscoreBlackList = setOf(
-    "jvmTarget", "versionName",
-    "useVersion", "gradleVersion",
-    "gradleLatestVersion", "toolVersion",
-    "ndkVersion", "force",
-    "targetCompatibility", "sourceCompatibility"
-)
-
-fun replaceVersionWithUndercore(line: String, inPluginsBlock: Boolean = false): String? = when {
-    inPluginsBlock -> line.replace(pluginVersionRegex, "")
-    line.trimStart().startsWith("version") -> null
-    underscoreBlackList.any { line.contains(it) } -> null
-    underscoreRegex.containsMatchIn(line) -> line.replace(underscoreRegex, "\$1_\$2")
-    else -> null
-}
-
-fun findFilesWithDependencyNotations(fromDir: File): List<File> {
-    require(fromDir.isDirectory()) { "Expected a directory, got ${fromDir.absolutePath}" }
-    val expectedNames = listOf("build", "build.gradle", "deps", "dependencies", "libs", "libraries", "versions")
-    val expectedExtesions = listOf("gradle", "kts", "groovy", "kt")
-    return fromDir.walkBottomUp()
-        .filter {
-            it.extension in expectedExtesions && it.nameWithoutExtension.toLowerCase() in expectedNames
-        }
-        .toList()
-}
-
 private val exampleBuildGradle = """
     import static de.fayard.refreshVersions.core.Versions.versionFor
 
@@ -240,22 +195,3 @@ private val exampleBuildGradle = """
     }
 """.trimIndent().lines()
 
-
-private fun List<String>.detectPluginsBlock(): List<Pair<String, Boolean>> {
-    val result = mutableListOf<Pair<String, Boolean>>()
-    var inBlock = false
-    for (line in this) {
-        if (line.replace("\\s+".toRegex(), " ").contains("plugins {")) {
-            result += line to false
-            inBlock = true
-        } else if (inBlock && line.contains('}')) {
-            result += line to false
-            inBlock = false
-        } else if (inBlock) {
-            result += line to true
-        } else {
-            result += line to false
-        }
-    }
-    return result
-}

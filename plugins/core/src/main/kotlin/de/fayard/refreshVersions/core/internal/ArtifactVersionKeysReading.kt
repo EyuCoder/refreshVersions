@@ -26,7 +26,6 @@ abstract class ArtifactVersionKeyReader private constructor() {
             filesContent: List<String>,
             embeddedRules: List<ArtifactVersionKeyRule> = DependencyGroup.ALL_RULES
         ): ArtifactVersionKeyReader {
-            println("ArtifactVersionKeyReader: embeddedRules=" + embeddedRules) // FIXME
             val rules: List<ArtifactVersionKeyRule> =
                 embeddedRules + filesContent.flatMap { parseArtifactVersionKeysRules(it) }.sortedDescending()
             return object : ArtifactVersionKeyReader() {
